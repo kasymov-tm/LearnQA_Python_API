@@ -1,6 +1,7 @@
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 from lib.my_requests import MyRequests
+import allure
 
 
 class TestUserGet(BaseCase):
@@ -33,3 +34,31 @@ class TestUserGet(BaseCase):
         expected_field = ["username", "email", "firstName", "lastName"]
         Assertions.assert_json_has_keys(response2, expected_field)
 
+    @allure.description("This test checks that authorized user can get only public data (username) when requesting data of another user")
+    def test_get_user_details_auth_as_other_user(self):
+
+        # Получение данных другого пользователя при авторизации как другой пользователь.
+        first_user_data = {
+            "email": 'vinkotov@example.com',
+            "password": '1234'
+        }
+
+        response1 = MyRequests.post("/user/login", data=first_user_data)
+        auth_sid = self.get_cookie(response1, "auth_sid")
+        token = self.get_header(response1, "x-csrf-token")
+
+        second_user_data = self.prepare_registration_data()
+        response2 = MyRequests.post("/user/", data=second_user_data)
+        Assertions.assert_code_status(response2, 200)
+        second_user_id = self.get_json_value(response2, "id")
+
+        response3 = MyRequests.get(
+            f"/user/{second_user_id}",
+            headers={"x-csrf-token": token},
+            cookies={"auth_sid": auth_sid}
+        )
+
+        Assertions.assert_json_has_key(response3, "username")
+        Assertions.assert_json_has_not_key(response3, "email")
+        Assertions.assert_json_has_not_key(response3, "firstName")
+        Assertions.assert_json_has_not_key(response3, "lastName")
