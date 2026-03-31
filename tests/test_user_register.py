@@ -51,7 +51,6 @@ class TestUserRegister(BaseCase):
         # Cоздание пользователя без одного из обязательных полей.
 
         data = self.prepare_registration_data()
-        # Удаляем одно поле из данных
         data.pop(missing_field)
 
         response = MyRequests.post("/user/", data=data)
@@ -67,7 +66,7 @@ class TestUserRegister(BaseCase):
         # Cоздание пользователя с очень коротким именем (1 символ)
 
         data = self.prepare_registration_data()
-        data['firstName'] = 'A'  # Имя из одного символа
+        data['firstName'] = 'A'
 
         response = MyRequests.post("/user/", data=data)
 
@@ -82,7 +81,7 @@ class TestUserRegister(BaseCase):
         # Cоздание пользователя с очень длинным именем (>250 символов)
 
         data = self.prepare_registration_data()
-        # Создаём имя длиной 251 символ
+
         long_name = 'A' * 251
         data['firstName'] = long_name
 
